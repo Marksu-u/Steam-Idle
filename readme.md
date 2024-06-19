@@ -18,13 +18,13 @@ The application is built on [electron](http://electron.atom.io/ "Electron").
 
 Install dependencies.
 ```
-$ npm install
+$ npm install --legacy-peer-deps
 or
 $ yarn
 ```
 To start the application, run:
 ```
-$ npm start:watch
+$ npm run start:watch
 ```
 
 ## Build
