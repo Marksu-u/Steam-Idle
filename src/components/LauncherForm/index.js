@@ -26,12 +26,12 @@ class LaunchForm extends Component {
 
   componentWillMount() {
     let _self = this;
-    fetch("http://api.steampowered.com/ISteamApps/GetAppList/v0001")
+    fetch("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
       .then(response => {
         return response.json();
       })
       .then(json => {
-        _self.setState({ gameList: json.applist.apps.app });
+        _self.setState({ gameList: json.applist.apps });
       })
       .catch(err => {
         _self.setState({ steamDown: true });
