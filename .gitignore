@@ -3,3 +3,10 @@ node_modules
 /public/*.bundle.js
 /releases
 *.log
+
+# .NET idler build artifacts
+idler-src/**/bin
+idler-src/**/obj
+
+# Steamworks SDK redistributable (download from partner.steamgames.com)
+idler-src/**/sdk
