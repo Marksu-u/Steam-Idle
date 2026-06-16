@@ -6,7 +6,6 @@ import { launch } from "../../launcher";
 import GameInput from "./GameInput";
 import GameModal from "./GameModal";
 import GameQueue from "../GameQueue";
-import LegacyForm from "../LegacyForm";
 
 class LaunchForm extends Component {
   constructor() {
@@ -14,26 +13,11 @@ class LaunchForm extends Component {
     this.state = {
       modalGame: {},
       modal: false,
-      gameList: [],
-      btnDisable: true,
-      steamDown: false,
       time: 0
     };
     this.handleLaunch = this.handleLaunch.bind(this);
     this.handleClickGame = this.handleClickGame.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
-  }
-
-  componentDidMount() {
-    let _self = this;
-    window.api
-      .getAppList()
-      .then(json => {
-        _self.setState({ gameList: json.applist.apps.app });
-      })
-      .catch(err => {
-        _self.setState({ steamDown: true });
-      });
   }
 
   handleLaunch() {
@@ -52,14 +36,8 @@ class LaunchForm extends Component {
   render() {
     return (
       <div>
-        {(this.state.steamDown &&
-          <LegacyForm steamDown={this.state.steamDown} />) ||
-          <GameInput
-            handleClickGame={this.handleClickGame}
-            gameList={this.state.gameList}
-          />}
-        {!this.state.steamDown &&
-          <small>* always check if the appid is correct.</small>}
+        <GameInput handleClickGame={this.handleClickGame} />
+        <small>* search by name, or type an appid directly.</small>
         <br /><br />
         <GameModal
           show={this.state.modal}
@@ -67,26 +45,25 @@ class LaunchForm extends Component {
           addGameToList={this.props.addGameToList}
           game={this.state.modalGame}
         />
-        {this.state.steamDown ||
-          <center>
-            <Button
-              className="start"
-              color="primary"
-              disabled={!this.props.gamesToLaunch.length > 0}
-              onClick={this.handleLaunch}
-            >
-              Start
-            </Button>
-            {" "}
-            <Button
-              className="clear"
-              color="primary"
-              disabled={!this.props.gamesToLaunch.length > 0}
-              onClick={this.props.clearQueue}
-            >
-              Clear Queue
-            </Button>
-          </center>}
+        <center>
+          <Button
+            className="start"
+            color="primary"
+            disabled={!this.props.gamesToLaunch.length > 0}
+            onClick={this.handleLaunch}
+          >
+            Start
+          </Button>
+          {" "}
+          <Button
+            className="clear"
+            color="primary"
+            disabled={!this.props.gamesToLaunch.length > 0}
+            onClick={this.props.clearQueue}
+          >
+            Clear Queue
+          </Button>
+        </center>
         <br />
         <GameQueue
           removeGame={this.props.removeGame}

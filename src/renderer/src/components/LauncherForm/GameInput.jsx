@@ -6,7 +6,17 @@ function getSuggestionValue(suggestion) {
 }
 
 function renderSuggestion(suggestion) {
-  return <span>{suggestion.name} <small>{suggestion.appid}</small></span>;
+  return (
+    <span>
+      {suggestion.icon &&
+        <img
+          src={suggestion.icon}
+          alt=""
+          style={{ width: "16px", height: "16px", marginRight: "8px", verticalAlign: "middle" }}
+        />}
+      {suggestion.name} <small>{suggestion.appid}</small>
+    </span>
+  );
 }
 
 class GameInput extends Component {
@@ -16,7 +26,8 @@ class GameInput extends Component {
       value: "",
       suggestions: []
     };
-    this.suggestions = [];
+    this.debounceTimer = null;
+    this.latestQuery = "";
 
     this.onSuggestionsFetchRequested = this.onSuggestionsFetchRequested.bind(
       this
@@ -28,6 +39,10 @@ class GameInput extends Component {
     );
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.debounceTimer);
+  }
+
   onChange(event, { newValue, method }) {
     this.setState({
       value: newValue
@@ -35,18 +50,26 @@ class GameInput extends Component {
   }
 
   onSuggestionsFetchRequested({ value }) {
-    this.suggestions = this.props.gameList
-      .filter(appid => {
-        return (
-          appid.name.toLowerCase().slice(0, value.length) ===
-            value.toLowerCase() ||
-          appid.appid.toString().slice(0, value.length) === value.toLowerCase()
-        );
-      })
-      .slice(0, 10);
-    this.setState({
-      suggestions: this.suggestions
-    });
+    clearTimeout(this.debounceTimer);
+    const query = value.trim();
+    this.latestQuery = query;
+    if (!query) {
+      this.setState({ suggestions: [] });
+      return;
+    }
+    this.debounceTimer = setTimeout(() => {
+      window.api
+        .searchApps(query)
+        .then(results => {
+          // Ignore stale responses from earlier keystrokes.
+          if (query !== this.latestQuery) return;
+          this.setState({ suggestions: results.slice(0, 10) });
+        })
+        .catch(() => {
+          if (query !== this.latestQuery) return;
+          this.setState({ suggestions: [] });
+        });
+    }, 250);
   }
 
   onSuggestionsClearRequested() {
@@ -63,7 +86,7 @@ class GameInput extends Component {
   render() {
     const { value, suggestions } = this.state;
     const inputProps = {
-      placeholder: "Type an exact game name or appid.*",
+      placeholder: "Type a game name or appid.",
       className: "form-control",
       value,
       onChange: this.onChange

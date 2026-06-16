@@ -1,37 +1,35 @@
 import React, { Component } from "react";
-import { Media, Button } from "reactstrap";
+import { Button } from "reactstrap";
+
+const FALLBACK_IMAGE =
+  "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/765/e41b9489145e521153eb6b02774bb7a7f519cee8.jpg";
 
 let RenderGames = ({ games, removeGame }) => (
   <div>
     {games.map((game, i) => (
-      <Media key={i}>
-        <Media
+      <div key={i} style={{ display: "flex", marginBottom: "10px" }}>
+        <img
           alt={game.name}
-          object
           src={`http://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header_292x136.jpg`}
-          onError={e =>
-            (e.target.src =
-              "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/765/e41b9489145e521153eb6b02774bb7a7f519cee8.jpg")}
-          style={{ maxWidth: "200px" }}
+          onError={e => (e.target.src = FALLBACK_IMAGE)}
+          style={{ maxWidth: "200px", alignSelf: "flex-start" }}
         />
-        <Media body style={{ paddingLeft: "10px" }}>
-          <Media>
-            <h6>
-              {game.name}
-              {" "}
-              <small>ID: {game.appid}</small>
-              {" "}
-              <Button color="danger" size="sm" onClick={() => removeGame(i)}>
-                X
-              </Button>
-            </h6>
-          </Media>
+        <div style={{ paddingLeft: "10px" }}>
+          <h6>
+            {game.name}
+            {" "}
+            <small>ID: {game.appid}</small>
+            {" "}
+            <Button color="danger" size="sm" onClick={() => removeGame(i)}>
+              X
+            </Button>
+          </h6>
           <small>
             {(game.time > 0 && "Time: " + game.time + " Hours") ||
               "Unlimited time"}
           </small>
-        </Media>
-      </Media>
+        </div>
+      </div>
     ))}
   </div>
 );

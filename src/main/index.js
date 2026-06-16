@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell, protocol, net } from "electron";
 import { autoUpdater } from "electron-updater";
-import { execFile } from "child_process";
+import { spawn } from "child_process";
 import { join, dirname, resolve } from "path";
 import { pathToFileURL } from "url";
 
@@ -109,11 +109,19 @@ ipcMain.on("open-legacy", () => {
 
 ipcMain.handle("app:get-version", () => app.getVersion());
 
-ipcMain.handle("steam:get-app-list", async () => {
+ipcMain.handle("steam:search", async (event, term) => {
+  const query = String(term || "").trim();
+  if (!query) return [];
   const response = await net.fetch(
-    "http://api.steampowered.com/ISteamApps/GetAppList/v0001"
+    `https://steamcommunity.com/actions/SearchApps/${encodeURIComponent(query)}`
   );
-  return response.json();
+  if (!response.ok) throw new Error(`SearchApps responded ${response.status}`);
+  const results = await response.json();
+  return results.map(r => ({
+    appid: Number(r.appid),
+    name: r.name,
+    icon: r.icon
+  }));
 });
 
 ipcMain.on("shell:open-external", (event, url) => {
@@ -128,21 +136,35 @@ ipcMain.on("window:minimize", event => {
   BrowserWindow.fromWebContents(event.sender)?.minimize();
 });
 
+// Each idler is a console app that shows its own status window. To get a real
+// per-game window we go through `cmd /c start`, which allocates a new console
+// (Node's `detached` uses DETACHED_PROCESS, which gives no console at all).
+// Only the numeric appid/duration go on the command line; the (untrusted) game
+// name is passed via the IDLER_NAME env var so it never reaches the shell.
+function spawnIdler(appid, durationMs, name) {
+  const child = spawn(
+    "cmd.exe",
+    ["/c", "start", "", "idler.exe", String(appid), String(durationMs)],
+    {
+      cwd: dirname(idlerPath),
+      env: { ...process.env, IDLER_NAME: name ?? String(appid) },
+      windowsHide: false,
+      stdio: "ignore"
+    }
+  );
+  child.on("error", err => console.error("idler launch failed:", err));
+  child.unref();
+}
+
 ipcMain.on("idler:launch", (event, games) => {
   games.forEach(game => {
-    execFile(
-      idlerPath,
-      [String(game.appid), String(game.time), game.name],
-      err => {
-        if (err) console.log(err);
-      }
-    );
+    spawnIdler(game.appid, game.time, game.name);
   });
 });
 
 ipcMain.on("idler:legacy-launch", (event, appids) => {
   appids.forEach(appid => {
-    execFile(idlerPath, [appid]);
+    spawnIdler(appid, 0);
   });
 });
 

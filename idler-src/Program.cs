@@ -7,7 +7,10 @@ if (args.Length < 1 || !uint.TryParse(args[0], out uint appId))
 }
 
 long durationMs = args.Length > 1 && long.TryParse(args[1], out long d) ? d : 0;
-string name = args.Length > 2 ? args[2] : appId.ToString();
+// The launcher passes the (untrusted) game name via env var so it never
+// touches the command line / shell. Fall back to argv, then the appid.
+string name = Environment.GetEnvironmentVariable("IDLER_NAME")
+    ?? (args.Length > 2 ? args[2] : appId.ToString());
 
 // Steam looks for this file (or the SteamAppId env var) to know which app is "running".
 File.WriteAllText("steam_appid.txt", appId.ToString());
@@ -19,7 +22,9 @@ if (!SteamAPI.Init())
     return 1;
 }
 
-Console.Title = $"Idling - {name}";
+// Setting the title throws if the process has no console; never let that
+// kill an otherwise-healthy idler.
+try { Console.Title = $"Idling - {name}"; } catch { }
 Console.WriteLine($"Idling '{name}' (AppID {appId})" + (durationMs > 0 ? $" for {TimeSpan.FromMilliseconds(durationMs)}." : " indefinitely."));
 
 var stopwatch = System.Diagnostics.Stopwatch.StartNew();

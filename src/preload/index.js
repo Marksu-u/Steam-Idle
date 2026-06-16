@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
   getVersion: () => ipcRenderer.invoke("app:get-version"),
-  getAppList: () => ipcRenderer.invoke("steam:get-app-list"),
+  searchApps: term => ipcRenderer.invoke("steam:search", term),
   openExternal: url => ipcRenderer.send("shell:open-external", url),
   closeWindow: () => ipcRenderer.send("window:close"),
   minimizeWindow: () => ipcRenderer.send("window:minimize"),
