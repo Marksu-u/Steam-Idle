@@ -1,7 +1,7 @@
 {
   "name": "steam-idle",
   "productName": "SteamIdle",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A simple application for idling games on Steam.",
   "license": "MIT",
   "main": "./out/main/index.js",

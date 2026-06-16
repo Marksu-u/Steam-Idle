@@ -8,7 +8,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }
 ]);
 
-let mainWindow, aboutWindow, legacyWindow;
+let mainWindow, aboutWindow;
 
 const isProduction = app.isPackaged;
 
@@ -78,33 +78,8 @@ function createAboutWindow() {
   });
 }
 
-function createLegacyWindow() {
-  const browserOptions = {
-    width: 490,
-    height: 225,
-    backgroundColor: "#222",
-    resizable: false,
-    show: false,
-    webPreferences: {
-      preload: join(__dirname, "../preload/index.js")
-    }
-  };
-  legacyWindow = new BrowserWindow(browserOptions);
-  loadPage(legacyWindow, "legacy.html");
-  legacyWindow.on("close", () => {
-    legacyWindow = null;
-  });
-  legacyWindow.once("ready-to-show", () => {
-    legacyWindow.show();
-  });
-}
-
 ipcMain.on("open-about", () => {
   createAboutWindow();
-});
-
-ipcMain.on("open-legacy", () => {
-  createLegacyWindow();
 });
 
 ipcMain.handle("app:get-version", () => app.getVersion());
@@ -162,18 +137,19 @@ ipcMain.on("idler:launch", (event, games) => {
   });
 });
 
-ipcMain.on("idler:legacy-launch", (event, appids) => {
-  appids.forEach(appid => {
-    spawnIdler(appid, 0);
-  });
-});
-
 function onReady() {
   if (!process.env["ELECTRON_RENDERER_URL"]) {
-    protocol.handle("app", request => {
+    protocol.handle("app", async request => {
       const { pathname } = new URL(request.url);
       const relative = pathname.replace(/^\//, "");
-      return net.fetch(pathToFileURL(join(rendererDir, relative)).toString());
+      try {
+        return await net.fetch(
+          pathToFileURL(join(rendererDir, relative)).toString()
+        );
+      } catch {
+        // e.g. the browser's automatic /favicon.ico probe — don't spam errors.
+        return new Response(null, { status: 404 });
+      }
     });
   }
   createWindow();

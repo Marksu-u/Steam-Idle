@@ -23,17 +23,12 @@ class Menu extends Component {
     this.toggle = this.toggle.bind(this);
     this.openGithub = this.openGithub.bind(this);
     this.openAbout = this.openAbout.bind(this);
-    this.openLegacy = this.openLegacy.bind(this);
   }
 
   toggle() {
     this.setState({
       dropdownOpen: !this.state.dropdownOpen
     });
-  }
-
-  openLegacy() {
-    window.api.openLegacy();
   }
 
   openGithub() {
@@ -59,7 +54,6 @@ class Menu extends Component {
           <DropdownItem header>
             Steam Idle <small>{this.props.version}</small>
           </DropdownItem>
-          <DropdownItem onClick={this.openLegacy}>Legacy Idler</DropdownItem>
           <DropdownItem divider />
           <DropdownItem onClick={this.openGithub}>GitHub</DropdownItem>
           <DropdownItem onClick={this.openAbout}>About</DropdownItem>
