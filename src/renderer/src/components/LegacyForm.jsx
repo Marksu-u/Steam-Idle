@@ -1,7 +1,5 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
-import { Container, Input, Button } from "reactstrap";
-import styled from "styled-components";
+import { Input, Button } from "reactstrap";
 
 import { legacyLaunch } from "../launcher";
 

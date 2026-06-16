@@ -1,7 +1,6 @@
 import React, { Component } from "react";
-import { remote } from "electron";
 import styled, { keyframes } from "styled-components";
-import { Dropdown, DropdownMenu, DropdownItem, Tooltip } from "reactstrap";
+import { Tooltip } from "reactstrap";
 
 import Menu from "./Menu";
 
@@ -20,13 +19,13 @@ const Rotate = styled.div`
   animation: ${rotate360} 2s linear infinite;
 `;
 
-const Frame = styled.div`{
+const Frame = styled.div`
   display: flex;
   align-items: center;
   background: #222;
   height: 50px;
   -webkit-app-region: drag;
-}`;
+`;
 
 const Icons = styled.div`
   margin-left: auto;
@@ -35,7 +34,7 @@ const Icons = styled.div`
   color: #fff;
 `;
 
-const Icon = styled.i`{
+const Icon = styled.i`
   padding: 5px;
   cursor: default;
   opacity: 0.5;
@@ -43,7 +42,7 @@ const Icon = styled.i`{
   &:hover {
    opacity: 1;
   }
-}`;
+`;
 
 class WindowControl extends Component {
   constructor(props) {
@@ -65,11 +64,11 @@ class WindowControl extends Component {
   }
 
   handleClose() {
-    remote.BrowserWindow.getFocusedWindow().close();
+    window.api.closeWindow();
   }
 
   handleMin() {
-    remote.BrowserWindow.getFocusedWindow().minimize();
+    window.api.minimizeWindow();
   }
 
   toggleTip() {

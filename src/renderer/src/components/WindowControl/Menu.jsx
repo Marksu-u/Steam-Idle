@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import styled from "styled-components";
-import { remote, ipcRenderer } from "electron";
 import { Dropdown, DropdownMenu, DropdownItem } from "reactstrap";
-
-let window = remote.getCurrentWindow();
 
 const MenuIcon = styled.div`
   font-size: 28px;
@@ -36,15 +33,15 @@ class Menu extends Component {
   }
 
   openLegacy() {
-    ipcRenderer.send("open-legacy");
+    window.api.openLegacy();
   }
 
   openGithub() {
-    remote.shell.openExternal("https://github.com/DevNvll/Steam-Idle");
+    window.api.openExternal("https://github.com/DevNvll/Steam-Idle");
   }
 
   openAbout() {
-    ipcRenderer.send("open-about");
+    window.api.openAbout();
   }
 
   render() {

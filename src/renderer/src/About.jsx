@@ -1,11 +1,19 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Container } from "reactstrap";
-import { shell, remote } from "electron";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/index.css";
 
 class About extends Component {
+  constructor() {
+    super();
+    this.state = { version: "" };
+  }
+
+  componentDidMount() {
+    window.api.getVersion().then(version => this.setState({ version }));
+  }
+
   render() {
     return (
       <Container>
@@ -13,7 +21,7 @@ class About extends Component {
         Created by <a
           href="#"
           onClick={() => {
-            shell.openExternal("https://github.com/DevNvll");
+            window.api.openExternal("https://github.com/DevNvll");
           }}
         >
           DevNvll
@@ -21,28 +29,28 @@ class About extends Component {
         Powered by <a
           href="#"
           onClick={() => {
-            shell.openExternal("https://steamworks.github.io/");
+            window.api.openExternal("https://steamworks.github.io/");
           }}
         >
           Steamworks.NET
         </a>, <a
           href="#"
           onClick={() => {
-            shell.openExternal("https://facebook.github.io/react/");
+            window.api.openExternal("https://facebook.github.io/react/");
           }}
         >
           React
         </a> and <a
           href="#"
           onClick={() => {
-            shell.openExternal("https://electron.atom.io");
+            window.api.openExternal("https://electron.atom.io");
           }}
         >
           Electron
-        </a>.<br /><center>Version {remote.app.getVersion()}</center>
+        </a>.<br /><center>Version {this.state.version}</center>
       </Container>
     );
   }
 }
 
-render(<About />, document.getElementById("root"));
+createRoot(document.getElementById("root")).render(<About />);

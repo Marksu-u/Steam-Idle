@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
-import { ipcRenderer } from "electron";
 
 class UpdateModal extends Component {
   constructor() {
@@ -9,7 +8,7 @@ class UpdateModal extends Component {
   }
 
   handleUpdate() {
-    ipcRenderer.send("ACCEPT_UPDATE");
+    window.api.acceptUpdate();
   }
 
   render() {

@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 
-import { shell } from "electron";
-
 const Heart = styled.i`
   color: #ff5357;
 `;
@@ -28,7 +26,7 @@ class Footer extends Component {
         <Link
           href="#"
           onClick={() => {
-            shell.openExternal("https://github.com/DevNvll");
+            window.api.openExternal("https://github.com/DevNvll");
           }}
         >
           DevNvll
@@ -38,7 +36,7 @@ class Footer extends Component {
         <Link
           href="#"
           onClick={() => {
-            shell.openExternal("https://github.com/DevNvll");
+            window.api.openExternal("https://github.com/DevNvll");
           }}
         >
           GitHub
@@ -49,7 +47,7 @@ class Footer extends Component {
         <Link
           href="#"
           onClick={() => {
-            shell.openExternal(
+            window.api.openExternal(
               "http://steamcommunity.com/profiles/76561198052893297"
             );
           }}

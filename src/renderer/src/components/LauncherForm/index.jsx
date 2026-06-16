@@ -24,12 +24,10 @@ class LaunchForm extends Component {
     this.toggleModal = this.toggleModal.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     let _self = this;
-    fetch("http://api.steampowered.com/ISteamApps/GetAppList/v0001")
-      .then(response => {
-        return response.json();
-      })
+    window.api
+      .getAppList()
       .then(json => {
         _self.setState({ gameList: json.applist.apps.app });
       })

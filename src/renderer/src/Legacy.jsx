@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Container } from "reactstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/index.css";
@@ -17,4 +17,4 @@ class Legacy extends Component {
   }
 }
 
-render(<Legacy />, document.getElementById("root"));
+createRoot(document.getElementById("root")).render(<Legacy />);

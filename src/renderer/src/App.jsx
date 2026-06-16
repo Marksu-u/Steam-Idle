@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { ipcRenderer, remote } from "electron";
 import { Container } from "reactstrap";
 
 import Footer from "./components/Footer";
@@ -11,6 +10,7 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
+      version: "",
       updateAvailable: false,
       downloadingUpdate: false,
       updateProgress: {},
@@ -25,22 +25,23 @@ class App extends Component {
 
   componentDidMount() {
     let _self = this;
-    ipcRenderer.on("UPDATE_READY", (event, text) => {
+    window.api.getVersion().then(version => _self.setState({ version }));
+    window.api.onUpdateReady(() => {
       _self.setState({
         updateAvailable: true,
         downloadingUpdate: false
       });
     });
-    ipcRenderer.on("DOWNLOAD_PROGRESS", (ev, obj) => {
+    window.api.onDownloadProgress(progress => {
       _self.setState({
         downloadingUpdate: true,
-        updateProgress: obj
+        updateProgress: progress
       });
     });
   }
 
   downloadUpdate() {
-    ipcRenderer.send("DOWNLOAD_UPDATE");
+    window.api.downloadUpdate();
   }
 
   addGameToList(game, time) {
@@ -71,7 +72,7 @@ class App extends Component {
     return (
       <div>
         <WindowControl
-          version={remote.app.getVersion()}
+          version={this.state.version}
           updateAvailable={this.state.updateAvailable}
           openUpdate={this.toggleUpdate}
           downloadingUpdate={this.state.downloadingUpdate}
@@ -81,7 +82,7 @@ class App extends Component {
           <header>
             <br />
             <h1 style={{ textAlign: "center" }} id="title">
-              Steam Idle <small>{remote.app.getVersion()}</small>
+              Steam Idle <small>{this.state.version}</small>
             </h1>
             <br />
           </header>
