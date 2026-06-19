@@ -24,6 +24,14 @@
     "publish": "npm run clean && electron-vite build && electron-builder --win --x64 -p always"
   },
   "build": {
+    "appId": "com.marksuu.steamidle",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Marksu-u",
+        "repo": "Steam-Idle"
+      }
+    ],
     "win": {
       "icon": "./assets/icon.ico",
       "target": [
