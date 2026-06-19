@@ -1,19 +1,32 @@
 using System.Runtime.InteropServices;
 
-if (args.Length < 1 || !uint.TryParse(args[0], out uint appId))
+// The launcher sets SteamAppId in the environment (so multiple idlers never
+// race on a shared steam_appid.txt). Fall back to argv[0] for standalone CLI use.
+uint appId;
+long durationMs;
+string? appIdEnv = Environment.GetEnvironmentVariable("SteamAppId");
+if (!string.IsNullOrEmpty(appIdEnv) && uint.TryParse(appIdEnv, out appId))
 {
-    Console.WriteLine("Usage: idler.exe <appid> [durationMs] [name]");
+    // Launched by the app: args = [durationMs]
+    durationMs = args.Length > 0 && long.TryParse(args[0], out long d) ? d : 0;
+}
+else if (args.Length >= 1 && uint.TryParse(args[0], out appId))
+{
+    // Standalone: args = <appid> [durationMs] [name]
+    durationMs = args.Length > 1 && long.TryParse(args[1], out long d) ? d : 0;
+}
+else
+{
+    Console.WriteLine("Usage: idler.exe <appid> [durationMs] [name]  (or set SteamAppId env)");
     return 1;
 }
 
-long durationMs = args.Length > 1 && long.TryParse(args[1], out long d) ? d : 0;
 // The launcher passes the (untrusted) game name via env var so it never
 // touches the command line / shell. Fall back to argv, then the appid.
 string name = Environment.GetEnvironmentVariable("IDLER_NAME")
     ?? (args.Length > 2 ? args[2] : appId.ToString());
 
-// Steam looks for this file (or the SteamAppId env var) to know which app is "running".
-File.WriteAllText("steam_appid.txt", appId.ToString());
+// The SDK reads SteamAppId at init; ensure it's set for the standalone path too.
 Environment.SetEnvironmentVariable("SteamAppId", appId.ToString());
 
 if (!SteamAPI.Init())

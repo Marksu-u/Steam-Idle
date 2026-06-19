@@ -2,8 +2,6 @@ import React, { Component } from "react";
 import styled, { keyframes } from "styled-components";
 import { Tooltip } from "reactstrap";
 
-import Menu from "./Menu";
-
 const rotate360 = keyframes`
   from {
     transform: rotate(0deg);
@@ -80,7 +78,6 @@ class WindowControl extends Component {
   render() {
     return (
       <Frame>
-        <Menu version={this.props.version} />
         <Icons>
           {this.props.updateAvailable &&
             <Icon

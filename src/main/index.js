@@ -8,7 +8,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }
 ]);
 
-let mainWindow, aboutWindow;
+let mainWindow;
 
 const isProduction = app.isPackaged;
 
@@ -57,31 +57,6 @@ function createWindow() {
   });
 }
 
-function createAboutWindow() {
-  const browserOptions = {
-    width: 485,
-    height: 175,
-    backgroundColor: "#222",
-    show: false,
-    parent: mainWindow,
-    webPreferences: {
-      preload: join(__dirname, "../preload/index.js")
-    }
-  };
-  aboutWindow = new BrowserWindow(browserOptions);
-  loadPage(aboutWindow, "about.html");
-  aboutWindow.on("close", () => {
-    aboutWindow = null;
-  });
-  aboutWindow.once("ready-to-show", () => {
-    aboutWindow.show();
-  });
-}
-
-ipcMain.on("open-about", () => {
-  createAboutWindow();
-});
-
 ipcMain.handle("app:get-version", () => app.getVersion());
 
 ipcMain.handle("steam:search", async (event, term) => {
@@ -111,30 +86,72 @@ ipcMain.on("window:minimize", event => {
   BrowserWindow.fromWebContents(event.sender)?.minimize();
 });
 
-// Each idler is a console app that shows its own status window. To get a real
-// per-game window we go through `cmd /c start`, which allocates a new console
-// (Node's `detached` uses DETACHED_PROCESS, which gives no console at all).
-// Only the numeric appid/duration go on the command line; the (untrusted) game
-// name is passed via the IDLER_NAME env var so it never reaches the shell.
-function spawnIdler(appid, durationMs, name) {
-  const child = spawn(
-    "cmd.exe",
-    ["/c", "start", "", "idler.exe", String(appid), String(durationMs)],
-    {
-      cwd: dirname(idlerPath),
-      env: { ...process.env, IDLER_NAME: name ?? String(appid) },
-      windowsHide: false,
-      stdio: "ignore"
-    }
-  );
+// Registry of running idlers. Each idler.exe is spawned directly and hidden
+// (no console), tracked by an internal id so it can be stopped, and tied to the
+// app's lifetime (killed on quit). The appid goes via the SteamAppId env var
+// (no shared steam_appid.txt race); the untrusted name via IDLER_NAME, so
+// neither touches the command line. The renderer mirrors this registry through
+// idler:started / idler:stopped events and renders the timers itself.
+const idlers = new Map(); // id -> { child, appid, name, durationMs, startTime }
+let nextIdlerId = 1;
+
+function sendToRenderer(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, payload);
+  }
+}
+
+function startIdler(appid, durationMs, name) {
+  // Dedupe: at most one idler per appid.
+  for (const entry of idlers.values()) {
+    if (entry.appid === appid) return;
+  }
+  const id = nextIdlerId++;
+  const safeName = name || String(appid);
+  const startTime = Date.now();
+  const child = spawn(idlerPath, [String(durationMs)], {
+    cwd: dirname(idlerPath),
+    env: { ...process.env, SteamAppId: String(appid), IDLER_NAME: safeName },
+    windowsHide: true,
+    stdio: "ignore"
+  });
+  idlers.set(id, { child, appid, name: safeName, durationMs, startTime });
+  sendToRenderer("idler:started", { id, appid, name: safeName, durationMs, startTime });
+
   child.on("error", err => console.error("idler launch failed:", err));
-  child.unref();
+  child.on("exit", () => {
+    idlers.delete(id);
+    sendToRenderer("idler:stopped", { id });
+  });
+}
+
+function stopIdler(id) {
+  // The exit handler does the registry cleanup + idler:stopped event.
+  idlers.get(id)?.child.kill();
 }
 
 ipcMain.on("idler:launch", (event, games) => {
-  games.forEach(game => {
-    spawnIdler(game.appid, game.time, game.name);
-  });
+  games.forEach(game => startIdler(game.appid, game.time, game.name));
+});
+
+ipcMain.on("idler:stop", (event, id) => stopIdler(id));
+
+ipcMain.on("idler:stop-all", () => {
+  for (const id of [...idlers.keys()]) stopIdler(id);
+});
+
+ipcMain.handle("idler:list", () =>
+  [...idlers.entries()].map(([id, e]) => ({
+    id,
+    appid: e.appid,
+    name: e.name,
+    durationMs: e.durationMs,
+    startTime: e.startTime
+  }))
+);
+
+app.on("before-quit", () => {
+  for (const entry of idlers.values()) entry.child.kill();
 });
 
 function onReady() {
