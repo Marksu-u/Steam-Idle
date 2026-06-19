@@ -1,5 +1,16 @@
 node_modules
 /dist
-/public/*.bundle.js
+/out
 /releases
 *.log
+
+# Steam writes this next to the idler's working dir at runtime
+steam_appid.txt
+bin/steam_appid.txt
+
+# .NET idler build artifacts
+idler-src/**/bin
+idler-src/**/obj
+
+# Steamworks SDK redistributable (download from partner.steamgames.com)
+idler-src/**/sdk
